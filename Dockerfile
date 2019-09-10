@@ -36,8 +36,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get clean && \
     rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-# Copy app source.
-COPY . /tmp/build/
+# Just copy package.json and package-lock.json
+COPY ./package*.json /tmp/build/
 
 # Give permissions to our build user.
 RUN mkdir -p /app && \
@@ -46,14 +46,31 @@ RUN mkdir -p /app && \
 # Switch over to the build user.
 USER stf-build
 
-# Run the build.
+# Install just the package dependencies before copying in the full source
 RUN set -x && \
     cd /tmp/build && \
     export PATH=$PWD/node_modules/.bin:$PATH && \
-    npm install --loglevel http && \
+    npm install --loglevel http
+
+# Just copy bower.json
+COPY --chown=stf-build:stf-build ./bower.json /tmp/build/
+
+# Bower install
+RUN set -x && \
+    cd /tmp/build && \
+    export PATH=$PWD/node_modules/.bin:$PATH && \
+    bower install && \
+    bower cache clean
+
+# Copy the rest of the app source in
+COPY --chown=stf-build:stf-build . /tmp/build/
+
+# Package and cleanup
+RUN set -x && \
+    cd /tmp/build && \
+    export PATH=$PWD/node_modules/.bin:$PATH && \
     npm pack && \
-    tar xzf stf-*.tgz --strip-components 1 -C /app && \
-    bower cache clean && \
+    tar xf stf-*.tgz --strip-components 1 -C /app && \
     npm prune --production && \
     mv node_modules /app && \
     npm cache clean --force&& \
