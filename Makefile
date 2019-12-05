@@ -1,10 +1,10 @@
 all: node_modules package-lock.json res/build res/bower_components
 
 node_modules: package.json
-	npm install
+	PATH=/usr/local/opt/node@8/bin/:$(PATH) /usr/local/opt/node@8/bin/npm install
 
 package-lock.json: node_modules
-	noop
+	/usr/bin/true
 
 res/build: res/bower_components havegulp
 	gulp build
