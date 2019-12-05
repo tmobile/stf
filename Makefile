@@ -7,7 +7,7 @@ package-lock.json: node_modules
 	/usr/bin/true
 
 res/build: res/bower_components havegulp
-	gulp build
+	PATH=/usr/local/opt/node@8/bin/:$(PATH) gulp build
 
 res/bower_components: havebower
 	bower install
